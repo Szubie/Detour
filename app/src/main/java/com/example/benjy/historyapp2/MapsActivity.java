@@ -70,8 +70,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
                 .build();
-
         mGoogleApiClient.connect();
+
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 mGoogleApiClient);
 
@@ -157,7 +157,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LocationRequest mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(7000);
         mLocationRequest.setFastestInterval(1000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_LOW_POWER);
         return mLocationRequest;
     }
     protected void startLocationUpdates() {

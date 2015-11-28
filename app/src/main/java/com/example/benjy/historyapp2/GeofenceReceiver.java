@@ -31,6 +31,39 @@ import java.util.List;
 /**
  * Created by Benjy on 23/11/2015.
  */
+
+
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.text.TextUtils;
+import android.widget.Toast;
+
+/**
+ * Created by Oluwole on 22/11/2015.
+ */
+import android.app.IntentService;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.support.v4.app.NotificationCompat;
+import android.text.TextUtils;
+import android.util.Log;
+
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingEvent;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by Benjy on 23/11/2015.
+ */
 public class GeofenceReceiver extends IntentService {
 
     /**
@@ -41,14 +74,47 @@ public class GeofenceReceiver extends IntentService {
     public GeofenceReceiver(String GeofenceReceiver) {
         super("GeofenceReceiver");
     }
-
-    @Override
-    protected void onHandleIntent(Intent intent) {
+    public GeofenceReceiver(){
+        super("");
 
     }
 
-    public GeofenceReceiver(){
-        super("");
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
+/*        if (geofencingEvent.hasError()) {
+            String errorMessage = GeofenceUtils.GeofenceErrorMessages.getErrorString(this,
+                    geofencingEvent.getErrorCode());
+            Log.e(TAG, errorMessage);
+            return;     */
+        // Get the transition type.
+        int geofenceTransition = geofencingEvent.getGeofenceTransition();
+
+        // Test that the reported transition was of interest.
+        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
+                geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+
+            // Get the geofences that were triggered. A single event can trigger
+            // multiple geofences.
+            List triggeringGeofences = geofencingEvent.getTriggeringGeofences();
+
+            // Get the transition details as a String.
+            String geofenceTransitionDetails = getGeofenceTransitionDetails(
+                    this,
+                    geofenceTransition,
+                    triggeringGeofences
+            );
+
+            // Send notification and log the transition details.
+            sendNotification(geofenceTransitionDetails);
+            Log.i("works", geofenceTransitionDetails);
+        }
+
+    }
+
+    private void sendNotification(String notificationDetails) {
+        // Create an explicit content Intent that starts the main Activity.
+        Intent notificationIntent = new Intent(getApplicationContext(), MapsActivity.class);
         long vibrate[]= {1000,3000};
         // Construct a task stack.
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
@@ -117,3 +183,4 @@ public class GeofenceReceiver extends IntentService {
     }
 
 }
+
