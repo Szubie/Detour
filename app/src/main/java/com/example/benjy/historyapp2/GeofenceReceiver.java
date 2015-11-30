@@ -137,7 +137,7 @@ public class GeofenceReceiver extends IntentService {
         builder.setSmallIcon(R.mipmap.ic_launcher)
                 // In a real app, you may want to use a library like Volley
                 // to decode the Bitmap.
-                .setPriority(2)
+                .setPriority(1)
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(),
                         R.mipmap.ic_launcher))
                 .setColor(Color.RED)
