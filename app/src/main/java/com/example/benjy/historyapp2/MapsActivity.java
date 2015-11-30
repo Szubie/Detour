@@ -47,7 +47,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final StoreLocation[] LOCATIONS = new StoreLocation[] {
             new StoreLocation(new LatLng(51.523231, -0.040399), new String("Queens' Building")),
             new StoreLocation(new LatLng(51.52446209938, -0.0392165780067444), new String("Jewish Cemetry")),
+<<<<<<< HEAD
             new StoreLocation(new LatLng(51.391151, -0.287265), new String("Testing Geofences")),
+=======
+>>>>>>> 9991f004348af5254b9cf848200fd2d25560fa05
 
     };
 
@@ -56,6 +59,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private PendingIntent mCurrentIntent;
 
 
+<<<<<<< HEAD
+=======
+    //51.527820, -0.021114
+>>>>>>> 9991f004348af5254b9cf848200fd2d25560fa05
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,7 +91,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * This callback is triggered when the map
      * is ready to be used.
      * This is where we can add markers or lines, add listeners or move the camera. In this case,
+<<<<<<< HEAD
      * we just add a marker in London, England.
+=======
+     * we just add a marker near Sydney, Australia.
+>>>>>>> 9991f004348af5254b9cf848200fd2d25560fa05
      * If Google Play services is not installed on the device, the user will be prompted to install
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
@@ -115,7 +126,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void createGeofences () {
 
         for (int i = 0; i < LOCATIONS.length; i++) {
+<<<<<<< HEAD
             Log.i("Geofence","Geofence created");
+=======
+            Log.i("COOL","££££££££");
+>>>>>>> 9991f004348af5254b9cf848200fd2d25560fa05
             mGeofenceList.add(new Geofence.Builder()
                     // Set the request ID of the geofence. This is a string to identify this
                     // geofence.
@@ -139,7 +154,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         createGeofences();
+<<<<<<< HEAD
         Log.i("TOOL", "Geofence list size:"+ mGeofenceList.size());
+=======
+        Log.i("TOOL", mGeofenceList.size() + "");
+>>>>>>> 9991f004348af5254b9cf848200fd2d25560fa05
         startLocationUpdates();
     }
 
@@ -155,9 +174,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     protected LocationRequest createLocationRequest() {
         LocationRequest mLocationRequest = new LocationRequest();
+<<<<<<< HEAD
         mLocationRequest.setInterval(5000);
         mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+=======
+        mLocationRequest.setInterval(7000);
+        mLocationRequest.setFastestInterval(1000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_LOW_POWER);
+>>>>>>> 9991f004348af5254b9cf848200fd2d25560fa05
         return mLocationRequest;
     }
     protected void startLocationUpdates() {
@@ -175,7 +200,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 //Log.i("APPPP", "It works");
             }
         });
+<<<<<<< HEAD
         Log.i("Location", "Location updated");
+=======
+        Log.i("WORKs", "YAEH");
+>>>>>>> 9991f004348af5254b9cf848200fd2d25560fa05
     }
     private void updateMap()
     {
