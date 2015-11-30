@@ -4,6 +4,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Vibrator;
 import android.text.TextUtils;
 import android.widget.Toast;
 
@@ -136,6 +137,7 @@ public class GeofenceReceiver extends IntentService {
         builder.setSmallIcon(R.mipmap.ic_launcher)
                 // In a real app, you may want to use a library like Volley
                 // to decode the Bitmap.
+                .setPriority(2)
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(),
                         R.mipmap.ic_launcher))
                 .setColor(Color.RED)
