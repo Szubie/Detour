@@ -25,10 +25,12 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationStatusCodes;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -39,11 +41,12 @@ import java.util.Arrays;
 
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
-    private Geofence fence;
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
-    private Location mLastLocation;
-    private Circle circle;
+    private Location mCurrentLocation;
+    private Circle circle;//user position
+    private CircleOption mOptions = new CircleOption();
+
     private static final StoreLocation[] LOCATIONS = new StoreLocation[] {
             new StoreLocation(new LatLng(51.523231, -0.040399), new String("Queens' Building")),
             new StoreLocation(new LatLng(51.52446209938, -0.0392165780067444), new String("Jewish Cemetry")),
@@ -53,17 +56,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     ArrayList<Geofence> mGeofenceList = new ArrayList<Geofence>();
     private static final int GEOFENCERADIUS =50; //50 meters
-    private PendingIntent mCurrentIntent;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -72,10 +77,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .build();
         mGoogleApiClient.connect();
 
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                mGoogleApiClient);
-
-        //createGeofences();
     }
 
 
@@ -90,32 +91,102 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * installed Google Play services and returned to the app.
      */
 
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
+        mMap = googleMap;//get map object in a global variable
+        LatLng london = new LatLng(51.523, -0.0402);//default location
+        final CameraUpdate init_zoom=CameraUpdateFactory.zoomTo(14);// default map's zoom
+        final float ref_zoom=14;//this var stores the current zoom value(init_zoom)
+        final int CIRCLE_SPEED=7;//the circle speed is the rate at wich the circle will shrink when the user zooms in,
+        // an higher number means increasing the  shrinking rate, so lower number may make the cicle shrink slower
+        // but if it's too low it may be not shrink enough. (just try it ;) and find which one is better)
 
-        // Add a marker in London and move the camera
-        LatLng london = new LatLng(51.523, -0.0402);
-        circle = mMap.addCircle(new CircleOptions()
+        CameraUpdate position= CameraUpdateFactory.newLatLng(london);// camera points the default location
+        final int CIRCLE_RADIUS = 35;// 35 is the defualt value for the radius of the circle(you can change it)
+        final int CIRCLE_SPEED_OUT=15;// the higher the faster the circle growes
+
+        // Add a default user position in London (queen mary) and move the camera
+
+
+        mOptions.setOption(new CircleOptions()
                 .center(london)
-                .radius(10)
+                .radius(CIRCLE_RADIUS)//
                 .strokeColor(Color.WHITE)
                 .fillColor(Color.BLUE));
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(london));
-        mMap.moveCamera(CameraUpdateFactory.zoomTo(12));
 
-        //TODO have to implement settings
-        //set markers
-        for (int ix = 0; ix < LOCATIONS.length; ix++) {
-            mMap.addMarker(new MarkerOptions()
-                    .position(LOCATIONS[ix].getPosition()));
-        }
+        circle = mMap.addCircle(mOptions.getOption());
+
+        mMap.moveCamera(position);
+        mMap.moveCamera(init_zoom);
+
+        //it will be use to understand if the user is zooming out or in.
+        mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
+            /*
+            Use this method to decrease the circle radius
+            zoom is the actual screen zoom, it goes from 2(min zoom, you can see the all globe)
+            to 20(max zoom), 14 is the default value (it's better than 12).
+            the increment is the value to add to the zoom in order to increase(circle speed) the speed at which
+            the circle shrinks.
+            the COEFFICIENT is 490 because 35*14= 490, 35 is the default radius of the center and 14 is
+            the default zoom.
+             */
+            private void ZoomCircle(double zoom, double circle_speed){
+                final double COEFFICIENT=490;
+                circle.setRadius(COEFFICIENT / (zoom + circle_speed));
+            }
+            //use ZoomOutCircle to make the circle grow
+            private void ZoomOutCircle(double zoom, double circle_speed){
+                final double COEFFICIENT=14;
+                circle.setRadius(COEFFICIENT*(circle_speed-zoom));
+            }
+
+            private void zoomIn(){
+                double inc = (mMap.getCameraPosition().zoom - ref_zoom);
+                if (inc>=1){
+                    ZoomCircle(mMap.getCameraPosition().zoom, CIRCLE_SPEED*inc);//set the radius of the user's circle depending on the zoom
+                }
+                else {
+                    circle.setRadius(CIRCLE_RADIUS);// i used the circle.setRadius because i know the standart value
+                }
+
+            }
+            private void zoomOut(){
+                double inc = (ref_zoom-mMap.getCameraPosition().zoom);
+                if (inc>=1){
+                    ZoomOutCircle(mMap.getCameraPosition().zoom,inc*CIRCLE_SPEED_OUT);//set the radius of the user's circle depending on the zoom
+                }
+                else {
+                    circle.setRadius(CIRCLE_RADIUS);// i used the circle.setRadius because i know the standart value
+                }
+
+            }
+            @Override
+            public void onCameraChange(CameraPosition cameraPosition) {
+
+
+                if (cameraPosition.zoom > ref_zoom) {
+                    //the user is zooming in, so the zoom increases, so it will be greater than the ref_zoom
+                    zoomIn();
+                }
+                else {
+                    //if the user is zooming out
+                    zoomOut();
+                }
+
+            }
+        });
     }
+
     public void createGeofences () {
 
         for (int i = 0; i < LOCATIONS.length; i++) {
+<<<<<<< HEAD
             Log.i("Geofence","Geofence created");
+=======
+
+>>>>>>> f7f61da5939bba4e8cebca5aa89872a96cf3955b
             mGeofenceList.add(new Geofence.Builder()
                     // Set the request ID of the geofence. This is a string to identify this
                     // geofence.
@@ -136,11 +207,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onConnected(Bundle bundle) {
         Log.i("Connected", "Location services connected.");
+<<<<<<< HEAD
 
 
         createGeofences();
         Log.i("TOOL", "Geofence list size:"+ mGeofenceList.size());
+=======
+        mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+>>>>>>> f7f61da5939bba4e8cebca5aa89872a96cf3955b
         startLocationUpdates();
+        //creategeofences should be used after retriving data from the database
+        createGeofences();
     }
 
     @Override
@@ -168,8 +245,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onLocationChanged(Location location) {
-        mLastLocation = location;
-        updateMap();
+        mCurrentLocation = location;
+        updateUserPosition();// it updates the user's circle inside the map
         LocationServices.GeofencingApi.addGeofences(mGoogleApiClient,getGeofencingRequest(),getGeofencePendingIntent()).setResultCallback(new ResultCallback<Status>() {
             @Override
             public void onResult(Status status) {
@@ -178,11 +255,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
         Log.i("Location", "Location updated");
     }
-    private void updateMap()
+    /*
+    This method will update the position of the user on the map, the value 'current' rapresents the
+    current position of the user, the ruturn
+     */
+    private void updateUserPosition()
     {
-
-        LatLng current = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+        LatLng current = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
         circle.setCenter(current);
+        Log.i("ZOOM:", " " + mMap.getCameraPosition().zoom);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(current));//move map to the user's position
+        updateMap();
+    }
+    /*
+    Updates the objects inside the map(geofences) and the user circle.
+     */
+    private void updateMap(){
+        mMap.clear();
+        // this instruction clears the Map object from the other object, it's needed in orther to display
+        //the right current geofences without having the previous ones still on screen
+
+        mOptions.setOption(mOptions.getOption().center(circle.getCenter()));
+        mOptions.setOption(mOptions.getOption().radius(circle.getRadius()));
+
+
+        circle=mMap.addCircle(mOptions.getOption());//i need to add again the user circle object on screen
+
+        //TODO have to implement settings
+        //set markers based on the return objects of the geoquery
+        for (int ix = 0; ix < LOCATIONS.length; ix++) {
+            mMap.addMarker(new MarkerOptions()
+                    .position(LOCATIONS[ix].getPosition()));
+        }
     }
 
     private GeofencingRequest getGeofencingRequest () {
@@ -201,5 +305,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // calling addGeofences() and removeGeofences().
         return PendingIntent.getService(this, 0, intent, PendingIntent.
                 FLAG_UPDATE_CURRENT);
+    }
+
+    /*
+    use get set methods to set and retreive circleoptions radius,center etc..
+    I've put CircleOptions because in order to add a circle on the map I need
+    circleOptions but from an object circle i can't get the OBJECT circleOptions
+    , so I decided to use CircleOptions  in order to update and modify a circle, inside the method
+    updateMap().
+
+     */
+    private class CircleOption{
+        CircleOptions mCircleOptions;
+
+        public CircleOption(){
+
+        }
+
+        public void setOption(CircleOptions op){
+            mCircleOptions=op;
+        }
+
+        public CircleOptions getOption(){
+            return mCircleOptions;
+        }
     }
 }
