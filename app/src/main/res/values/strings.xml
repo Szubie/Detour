@@ -1,9 +1,12 @@
 <resources>
     <string name="app_name">HistoryApp2</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_maps">DeTour</string>
     <string name="add_geofences_result_success">SUCCES</string>
     <string name="add_geofences_result_failure">FAIL</string>
     <!-- Transition type strings -->
     <string name="geofence_transition_entered">Entered</string>
     <string name="geofence_transition_exited">Exited</string>
+    <!-- Explore strings -->
+    <string name="explore_locations">Explore Locations</string>
+    <string name="list_locations">Interestring Points Near You:</string>
 </resources>

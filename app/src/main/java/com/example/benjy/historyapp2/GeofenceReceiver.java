@@ -140,8 +140,9 @@ public class GeofenceReceiver extends IntentService {
                         R.mipmap.ic_launcher))
                 .setColor(Color.RED)
                 .setContentTitle(notificationDetails)
-                .setContentText("An interesting location is nr you!")
+                .setContentText("An interesting location is near you!")
                 .setVibrate(vibrate)
+                .setPriority(2)
                 .setContentIntent(notificationPendingIntent);
 
         // Dismiss notification once the user touches it.
