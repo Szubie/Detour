@@ -142,6 +142,7 @@ public class GeofenceReceiver extends IntentService {
                 .setContentTitle(notificationDetails)
                 .setContentText("An interesting location is nr you!")
                 .setVibrate(vibrate)
+                .setPriority(2)
                 .setContentIntent(notificationPendingIntent);
 
         // Dismiss notification once the user touches it.

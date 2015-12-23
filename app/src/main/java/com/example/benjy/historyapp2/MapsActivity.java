@@ -50,6 +50,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final StoreLocation[] LOCATIONS = new StoreLocation[] {
             new StoreLocation(new LatLng(51.523231, -0.040399), new String("Queens' Building")),
             new StoreLocation(new LatLng(51.52446209938, -0.0392165780067444), new String("Jewish Cemetry")),
+            new StoreLocation(new LatLng(51.526369, -0.039856), "Test"),
+            new StoreLocation(new LatLng(51.391151, -0.287265), "Test2"),
 
     };
 
@@ -193,7 +195,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             LOCATIONS[i].getPosition().longitude,
                             GEOFENCERADIUS
                     )
-                    .setExpirationDuration(30000)
+                    .setExpirationDuration(3000)
                     .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
                             Geofence.GEOFENCE_TRANSITION_EXIT)
                     .build());
@@ -221,9 +223,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     protected LocationRequest createLocationRequest() {
         LocationRequest mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(7000);
+        mLocationRequest.setInterval(1000);
         mLocationRequest.setFastestInterval(1000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_LOW_POWER);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         return mLocationRequest;
     }
     protected void startLocationUpdates() {
@@ -273,6 +275,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //set markers based on the return objects of the geoquery
         for (int ix = 0; ix < LOCATIONS.length; ix++) {
             mMap.addMarker(new MarkerOptions()
+                    .title(LOCATIONS[ix].getExplaination())
+                    .snippet("TODO")
                     .position(LOCATIONS[ix].getPosition()));
         }
     }
