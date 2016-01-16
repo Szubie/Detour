@@ -1,4 +1,4 @@
-package com.example.benjy.historyapp2;
+package com.example.oluwole.historyapp;
 
 import org.junit.Test;
 

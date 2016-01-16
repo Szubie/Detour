@@ -1,10 +1,9 @@
-package com.example.benjy.historyapp2;
+package com.example.oluwole.historyapp;
 
 /**
- * Created by Benjy on 23/11/2015.
+ * Created by Oluwole on 22/11/2015.
  */
-public final class GeofenceUtils {
-
+public class GeofenceUtils {
     // Used to track what type of geofence removal request was made.
     public enum REMOVE_TYPE {INTENT, LIST}
 
