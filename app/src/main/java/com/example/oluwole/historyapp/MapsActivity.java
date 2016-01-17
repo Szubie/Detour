@@ -6,7 +6,10 @@ import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
+import android.app.Service;
+import android.app.usage.NetworkStatsManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -19,6 +22,9 @@ import android.location.Geocoder;
 
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Parcelable;
@@ -111,15 +117,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     //true if the user goes away for a houndred meters from it's starting point and false after it has created them
     private CameraUpdate init_zoom=null;// default map's zoom
     private long user_id=0;
-
+    private boolean mDataLoaded=false;
 
 
     public static boolean isGpsEnabled=false;//variable for the GPS state
+    public static boolean isNetworkEnabled=false;
     public static boolean mMapsApi_connected=false;//flag for knowing if the googleMapsApi are connected
     public static FragmentManager GpsFragmentManager;
-    public static String COUNTRY="United Kingdom";
-    public static String CITY="London";
+    public static String COUNTRY="";
+    public static String CITY="";
     public static final String PASSING="Loc";
+
 
 
 
@@ -153,9 +161,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 DbAdapter adapter=new DbAdapter(getApplicationContext(),CITY);
                 adapter.open();
                 adapter.CheckAndReplaceTable();
-                startAddLocationsActivity();
                 if (!isGpsEnabled)
                     GPSEnabled();
+                else {
+                    //TODO check if network is available
+                    if (!isNetworkEnabled)
+                        NetworkEnabled();
+                    else {
+                        if (mDataLoaded)
+                            startAddLocationsActivity();
+                        else
+                            PrintToast("Please wait...");
+                    }
+                }
 
             }
         });
@@ -278,12 +296,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         }
         if (id==R.id.action_movecamera){
-            mMap.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude())));
+            if (mCurrentLocation!=null)
+                mMap.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude())));
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    private void NetworkEnabled(){
+
+        ConnectivityManager cm =
+                (ConnectivityManager)getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        isNetworkEnabled = activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
+
+        //ask the user to activate data connection
+        if (!isNetworkEnabled)
+            PrintToast("Couldn't connetect to the network, please activate data connection.");
+    }
 
     private void GPSEnabled(){
         LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -374,6 +406,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onComplete(String key, FirebaseError error) {
                 if (error != null) {
                     PrintToast("There was a problem when savaing the point: " + error.toString());
+                    //TODO I must send the intent data back to the startAddLocationsActivity, so that the user doesn't have to write it again
                     startAddLocationsActivity();
                 } else {
                     PrintToast("The location has been saved!");
@@ -419,11 +452,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         //it's called when the user has wrote the location's name, description and has clicked the deploy button
         if (requestCode == 9001) {
             if(resultCode == Activity.RESULT_OK) {
-                setLocationValue(master, data);
+                if (isNetworkEnabled)
+                    setLocationValue(master, data);
+                else{
+                    PrintToast("Network connection is absent at the moment, please try in another moment");
+                    //TODO the intent data i should send it back to the startAddLocationsActivity
+                }
+
             }
             if (resultCode == Activity.RESULT_CANCELED) {
                 //Write your code if there's no result
-
+                //quite difficult to reach
             }
         }
         //it's called when the user goes back from the GPS setting option activity
@@ -609,7 +648,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             else{
                 //TODO find a solution when we can't find an address
-                PrintToast("Could not get address..!");
+                PrintToast("Could not get address!");
+                getMyLocationAddress(i);
+                //we'll give London and UK as a default value or ask the user for input
+
+
             }
 
         return null;
@@ -619,22 +662,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.i("Connected", "Location services connected.");
 
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        if (mLastLocation!=null) {
+        //TODO check Network state, prompt the user to turn on data connection,
+        if (mLastLocation!=null&&isNetworkEnabled) {
             //AddressResultReceiver mResultReceiver = null;
             //Intent intent = new Intent(this, FetchAddressIntentService.class);
             //intent.putExtra(FetchAddressIntentService.Constants.RECEIVER, mResultReceiver);
             //intent.putExtra(FetchAddressIntentService.Constants.LOCATION_DATA_EXTRA, mLastLocation);
             //startService(intent);
-            //if (CITY.equals("")) {
+
+            if (COUNTRY.equals("")){
                 COUNTRY = getMyLocationAddress(0);
                 CITY = getMyLocationAddress(1);
-            //}
+            }
+
 
             mMapsApi_connected=true;
             startLocationUpdates();
         }
         else{
-                onConnected(null);
+            PrintToast("Small issues with the gps or network, please wait");
+            //onConnected(null);
         }
 
     }
@@ -682,16 +729,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onStart(){
         registerGPSreceiver();
+        registerNetworkBroadcastReceiver();
         GPSEnabled();
+        NetworkEnabled();
 
         super.onStart();
     }
     @Override
     protected void onStop() {
         unregisterGPSreceiver();
+        unregisterNetworkBroadcastReceiver();
         if (mMapsApi_connected) {
-            //stopLocationUpdates();
-            //mGoogleApiClient.disconnect();
+            stopLocationUpdates();
+            mGoogleApiClient.disconnect();
             mMapsApi_connected = false;
         }
         super.onStop();
@@ -703,7 +753,29 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    //These methods register and unregister the GPS Broadcast receiver, that knows when the gps is on or off
+    private void registerNetworkBroadcastReceiver() {
+        PackageManager pm = getPackageManager();
+        ComponentName compName =
+                new ComponentName(getApplicationContext(),
+                        NetworkBroadcastReceiver.class);
+        pm.setComponentEnabledSetting(
+                compName,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP);
+    }
+
+    private void unregisterNetworkBroadcastReceiver() {
+        PackageManager pm = getPackageManager();
+        ComponentName compName =
+                new ComponentName(getApplicationContext(),
+                        NetworkBroadcastReceiver.class);
+        pm.setComponentEnabledSetting(
+                compName,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP);
+    }
+
+        //These methods register and unregister the GPS Broadcast receiver, that knows when the gps is on or off
     private void unregisterGPSreceiver(){
         PackageManager pm = getPackageManager();
         ComponentName compName =
@@ -723,7 +795,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 compName,
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                 PackageManager.DONT_KILL_APP);
-
     }
 
     protected void startLocationUpdates() {
@@ -760,9 +831,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             updateUserPosition();// it updates the user's circle inside the map
 
         }//check if there are problem with the gps
+        //TODO check network
         else {
             if (!isGpsEnabled)
                 GPSEnabled();
+            if (!isNetworkEnabled)
+                NetworkEnabled();
         }
 
     }
@@ -778,24 +852,29 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.i("DISTANCE", "Distance in m: " + distance);
         Log.i("ZOOM", " " + mMap.getCameraPosition().zoom);
 
-
-        final Firebase master = GetPathLocations("Places");
-        if (FLAG_FIRST_CYCLE)//since it's the first cycle, fetch all the data near the user;
-        {
-            mMap.moveCamera(init_zoom);
-            mMap.animateCamera(CameraUpdateFactory.newLatLng(current));
-            GeoFire geoFire = new GeoFire(master);
-            GetDataByLocation(geoFire, new LatLng(current.latitude, current.longitude), 1);
+        //TODO check network
+        if (isNetworkEnabled) {
+            final Firebase master = GetPathLocations("Places");
+            if (FLAG_FIRST_CYCLE)//since it's the first cycle, fetch all the data near the user;
+            {
+                mDataLoaded = false;
+                mMap.moveCamera(init_zoom);
+                mMap.animateCamera(CameraUpdateFactory.newLatLng(current));
+                mDataLoaded = false;
+                GeoFire geoFire = new GeoFire(master);
+                GetDataByLocation(geoFire, new LatLng(current.latitude, current.longitude), 1);
+            } else if (distance > 150) {
+                //if the user moved more than a houndred meters, get new data from the database and change mLastLocation's value with the current's value
+                isGeoFenceEnabled = true;
+                mLastLocation.setLatitude(current.latitude);
+                mLastLocation.setLongitude(current.longitude);
+                mDataLoaded = false;
+                GeoFire geoFire = new GeoFire(master);
+                GetDataByLocation(geoFire, new LatLng(current.latitude, current.longitude), 1);
+            }
         }
-        else if (distance>150) {
-            //if the user moved more than a houndred meters, get new data from the database and change mLastLocation's value with the current's value
-            isGeoFenceEnabled=true;
-            mLastLocation.setLatitude(current.latitude);
-            mLastLocation.setLongitude(current.longitude);
-            GeoFire geoFire = new GeoFire(master);
-            GetDataByLocation(geoFire, new LatLng(current.latitude, current.longitude), 1);
-        }
-
+        else
+            NetworkEnabled();
     }
 
     private GeofencingRequest getGeofencingRequest () {
@@ -979,7 +1058,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
 
 
-            updateMap(false,null);
+                updateMap(false,null);
+                mDataLoaded=true;
         }
 
         @Override

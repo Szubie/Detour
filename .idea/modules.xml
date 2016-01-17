@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/Detour.iml" filepath="$PROJECT_DIR$/Detour.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/historyApp2.iml" filepath="$PROJECT_DIR$/historyApp2.iml" />
     </modules>
