@@ -26,6 +26,7 @@ public class AddLocationsActivity extends Activity{
 
 
         final Intent ListIntent = getIntent();
+        //TODO be able to get previous info, if something may have gone wrong
 
         final EditText location_name = (EditText) findViewById(R.id.LocNameEditText);
         final EditText location_description = (EditText) findViewById(R.id.LocDescriptionEditText);
@@ -41,9 +42,16 @@ public class AddLocationsActivity extends Activity{
                         final Intent intent = new Intent();
                         intent.putExtra("location_name", location_name.getText().toString());
                         intent.putExtra("location_description", location_description.getText().toString());
-                        intent.putExtra("location_tags", HashTagScan(location_tags.getText().toString()));//tags--> #night#cold+' '
-                        setResult(Activity.RESULT_OK, intent);
-                        finish();
+                        String tags=HashTagScan(location_tags.getText().toString());
+                        if (tags!=null) {
+                            intent.putExtra("location_tags", tags);//tags--> #night#cold+' '
+                            setResult(Activity.RESULT_OK, intent);
+                            finish();
+                        }
+                        else
+                            PrintToast("Please rewrite the tags (follow the initial hint).");
+
+
                     }
 
                 }
@@ -92,6 +100,8 @@ public class AddLocationsActivity extends Activity{
         String tmp="";
         int i=0;
         //TODO: quite important, must check if the first char was a # or not
+        if (s.charAt(i)!='#')
+            return null;
         while (s.charAt(i)=='#') {
             tmp+=s.charAt(i);
             i++;

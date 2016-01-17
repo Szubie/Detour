@@ -13,6 +13,7 @@
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:hint="@string/nameHint"
         android:id="@+id/LocNameEditText" />
 
     <TextView
@@ -27,6 +28,7 @@
         android:layout_height="wrap_content"
         android:inputType="textMultiLine"
         android:ems="10"
+        android:hint="@string/descriptionHint"
         android:id="@+id/LocDescriptionEditText" />
 
     <TextView
@@ -39,6 +41,7 @@
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:hint="@string/tagHint"
         android:id="@+id/TagEditText" />
 
     <Button

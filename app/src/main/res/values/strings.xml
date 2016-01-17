@@ -13,5 +13,8 @@
     <string name="action_search">Search</string>
     <string name="action_movecamera">Move Camera</string>
     <!-- AddLocation strings -->
+    <string name="tagHint">#Tag1#Tag2#Tag3</string>
+    <string name="descriptionHint">Description</string>
+    <string name="nameHint">Name</string>
 
 </resources>
