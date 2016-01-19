@@ -118,7 +118,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private CameraUpdate init_zoom=null;// default map's zoom
     private long user_id=0;
     private boolean mDataLoaded=false;
-
+    private double SEARCH_RADIUS=1;
 
     public static boolean isGpsEnabled=false;//variable for the GPS state
     public static boolean isNetworkEnabled=false;
@@ -158,18 +158,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         setMarkerbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DbAdapter adapter=new DbAdapter(getApplicationContext(),CITY);
-                adapter.open();
-                adapter.CheckAndReplaceTable();
-                if (!isGpsEnabled)
-                    GPSEnabled();
+                //TODO solve if CITY=null;
+
+                if (!isNetworkEnabled)
+                    NetworkEnabled();
                 else {
-                    //TODO check if network is available
-                    if (!isNetworkEnabled)
-                        NetworkEnabled();
+                    if (!isGpsEnabled)
+                        GPSEnabled();
                     else {
-                        if (mDataLoaded)
+                        if (mDataLoaded) {
+                            DbAdapter adapter=new DbAdapter(getApplicationContext(),CITY);
+                            adapter.open();
+                            adapter.CheckAndReplaceTable();
                             startAddLocationsActivity();
+                        }
                         else
                             PrintToast("Please wait...");
                     }
@@ -311,7 +313,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         isNetworkEnabled = activeNetwork != null &&
                 activeNetwork.isConnectedOrConnecting();
-
+        //TODO should create a dialog since it's more visible
         //ask the user to activate data connection
         if (!isNetworkEnabled)
             PrintToast("Couldn't connetect to the network, please activate data connection.");
@@ -329,13 +331,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         else {
             //When the GPS is enabled for the first time it needs time to get the users location
+            if (MapsActivity.mGoogleApiClient.isConnected())
+                MapsActivity.mGoogleApiClient.disconnect();
             new Thread() {
                 @Override
                 public void run() {
                     try {
                         super.run();
                         //TODO put a handler to create a toast message
-                        sleep(3000);  //Delay of 3 seconds
+                        sleep(5000);  //Delay of 5 seconds
                     } catch (Exception e) {
 
                     } finally {
@@ -455,7 +459,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if (isNetworkEnabled)
                     setLocationValue(master, data);
                 else{
-                    PrintToast("Network connection is absent at the moment, please try in another moment");
+                    PrintToast("Network connection is absent at the moment, please try in another moment.");
                     //TODO the intent data i should send it back to the startAddLocationsActivity
                 }
 
@@ -467,7 +471,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         //it's called when the user goes back from the GPS setting option activity
         else if (requestCode==1){
-            GPSEnabled();
+            if (isNetworkEnabled)
+                GPSEnabled();
+            else
+                NetworkEnabled();
         }
 
     }//onActivityResult
@@ -649,6 +656,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             else{
                 //TODO find a solution when we can't find an address
                 PrintToast("Could not get address!");
+
                 getMyLocationAddress(i);
                 //we'll give London and UK as a default value or ask the user for input
 
@@ -671,6 +679,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             //startService(intent);
 
             if (COUNTRY.equals("")){
+
                 COUNTRY = getMyLocationAddress(0);
                 CITY = getMyLocationAddress(1);
             }
@@ -680,8 +689,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             startLocationUpdates();
         }
         else{
-            PrintToast("Small issues with the gps or network, please wait");
-            //onConnected(null);
+            PrintToast("Small issues with the gps or network, please wait.");
+            //TODO check isnetworkenabled and isgpsenabled before calling methods
+            GPSEnabled();
         }
 
     }
@@ -730,8 +740,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onStart(){
         registerGPSreceiver();
         registerNetworkBroadcastReceiver();
-        GPSEnabled();
         NetworkEnabled();
+        if (isNetworkEnabled)
+            GPSEnabled();
 
         super.onStart();
     }
@@ -740,8 +751,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         unregisterGPSreceiver();
         unregisterNetworkBroadcastReceiver();
         if (mMapsApi_connected) {
-            stopLocationUpdates();
-            mGoogleApiClient.disconnect();
+            if (mGoogleApiClient.isConnected()) {
+                stopLocationUpdates();
+                mGoogleApiClient.disconnect();
+            }
             mMapsApi_connected = false;
         }
         super.onStop();
@@ -831,11 +844,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             updateUserPosition();// it updates the user's circle inside the map
 
         }//check if there are problem with the gps
-        //TODO check network
+
         else {
-            if (!isGpsEnabled)
-                GPSEnabled();
-            if (!isNetworkEnabled)
+            if (isNetworkEnabled) {
+                if (!isGpsEnabled)
+                    GPSEnabled();
+            }
+            else
                 NetworkEnabled();
         }
 
@@ -862,7 +877,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(current));
                 mDataLoaded = false;
                 GeoFire geoFire = new GeoFire(master);
-                GetDataByLocation(geoFire, new LatLng(current.latitude, current.longitude), 1);
+                GetDataByLocation(geoFire, new LatLng(current.latitude, current.longitude), SEARCH_RADIUS);
             } else if (distance > 150) {
                 //if the user moved more than a houndred meters, get new data from the database and change mLastLocation's value with the current's value
                 isGeoFenceEnabled = true;

@@ -20,29 +20,32 @@ public class NetworkBroadcastReceiver extends BroadcastReceiver {
         if (MapsActivity.isNetworkEnabled){
             //if (MapsActivity.mGoogleApiClient!=null)
             //MapsActivity.mMapsApi_connected=!MapsActivity.mMapsApi_connected;
-            Log.i("Network","THE NETWORK state has changed");
+
             //Log.i("NETWORK Status", "res:" + MapsActivity.mGoogleApiClient.isConnected());
             //if (!MapsActivity.mMapsApi_connected) {
             if (MapsActivity.mGoogleApiClient!=null) {
+                Log.i("Network","THE NETWORK state has changed");
                 if (MapsActivity.mGoogleApiClient.isConnected())
+                    MapsActivity.mGoogleApiClient.disconnect();
                     new Thread() {
                         @Override
                         public void run() {
                             try {
                                 super.run();
-                                MapsActivity.mGoogleApiClient.disconnect();
-                                //TODO put a handler to create a toast message
-                                sleep(7000);  //Delay of 10 seconds
+                                    //TODO put a handler to create a toast message
+                                    sleep(5000);  //Delay of 5 seconds
+
                             } catch (Exception e) {
 
                             } finally {
-                                if (MapsActivity.mGoogleApiClient != null)
-                                    MapsActivity.mGoogleApiClient.connect();
+                                //if (MapsActivity.isGpsEnabled) {
+                                    if (MapsActivity.mGoogleApiClient != null)
+                                        MapsActivity.mGoogleApiClient.connect();
+                                //}
                             }
                         }
                     }.start();
 
-                //}
             }
         }
     }

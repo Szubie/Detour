@@ -25,10 +25,12 @@ public class GPSreceiver extends BroadcastReceiver {
     public void onReceive(final Context context, Intent intent) {
         MapsActivity.isGpsEnabled=!MapsActivity.isGpsEnabled;
         //only if the user presses cancel on the GPSdialog
-        if (!MapsActivity.mMapsApi_connected) {
-            if (!MapsActivity.isGpsEnabled) ;
+        //if (!MapsActivity.mMapsApi_connected) {
+            if (MapsActivity.isGpsEnabled) ;
             else {
                 //When the GPS is enabled for the first time it needs time to get the users location
+                if (MapsActivity.mGoogleApiClient.isConnected())
+                    MapsActivity.mGoogleApiClient.disconnect();
                 new Thread() {
                     @Override
                     public void run() {
@@ -39,7 +41,10 @@ public class GPSreceiver extends BroadcastReceiver {
                         } catch (Exception e) {
 
                         } finally {
-                            MapsActivity.mGoogleApiClient.connect();
+                            if (MapsActivity.isNetworkEnabled) {
+                                if (MapsActivity.mGoogleApiClient != null)
+                                    MapsActivity.mGoogleApiClient.connect();
+                            }
                         }
                     }
                 }.start();
@@ -47,4 +52,4 @@ public class GPSreceiver extends BroadcastReceiver {
         }
    }
 
-}
+//}
