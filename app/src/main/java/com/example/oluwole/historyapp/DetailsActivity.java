@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.client.Firebase;
 
@@ -17,13 +18,13 @@ import com.firebase.client.Firebase;
  */
 public class DetailsActivity extends Activity {
     public static StoreLocation LOCATIONS;
-    public static boolean detailsOn=false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.detail_activity);
         Firebase.setAndroidContext(this);
-        detailsOn=true;
+
         Intent intent = getIntent();
         TextView title = (TextView) findViewById(R.id.TitleTextView);
         TextView tags = (TextView) findViewById(R.id.TagTextView);
@@ -65,7 +66,10 @@ public class DetailsActivity extends Activity {
                     cursor.close();
                     dbHelper.close();
                     favButton.setText("Favourite");
-                    master.child(LOCATIONS.getTitle()).child("count").setValue(LOCATIONS.getFavourites() + (long) 1);
+                    if (MapsActivity.isNetworkEnabled)
+                        master.child(LOCATIONS.getTitle()).child("count").setValue(LOCATIONS.getFavourites() + (long) 1);
+                    else
+                        PrintToast("No data connection found, couldn't complete the action.");
                     rate.setText("" + (LOCATIONS.getFavourites()+1));
                 }
                 else {
@@ -78,7 +82,10 @@ public class DetailsActivity extends Activity {
                     dbHelper.close();
                     favButton.clearFocus();
                     favButton.setText("Not Favourite");
-                    master.child(LOCATIONS.getTitle()).child("count").setValue(LOCATIONS.getFavourites() - (long) 1);
+                    if (MapsActivity.isNetworkEnabled)
+                        master.child(LOCATIONS.getTitle()).child("count").setValue(LOCATIONS.getFavourites() - (long) 1);
+                    else
+                        PrintToast("No data connection found, couldn't complete the action.");
                     rate.setText("" + (LOCATIONS.getFavourites()));
                 }
 
@@ -97,6 +104,8 @@ public class DetailsActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        detailsOn=false;
+    }
+    private void PrintToast(String s){
+        Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
     }
 }

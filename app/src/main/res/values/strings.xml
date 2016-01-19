@@ -16,5 +16,7 @@
     <string name="tagHint">#Tag1#Tag2#Tag3</string>
     <string name="descriptionHint">Description</string>
     <string name="nameHint">Name</string>
-
+    <!-- CITY and COUNTRY string, used as a key in shared Preferences -->
+    <string name="City">City</string>
+    <string name="Country">Country</string>
 </resources>

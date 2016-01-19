@@ -2,55 +2,42 @@ package com.example.oluwole.historyapp;
 
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.app.PendingIntent;
-import android.app.ProgressDialog;
-import android.app.Service;
-import android.app.usage.NetworkStatsManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteCursor;
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
-
-
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
-import android.net.Network;
 import android.net.NetworkInfo;
+import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
-import android.os.Parcelable;
 import android.os.ResultReceiver;
 import android.provider.Settings;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.DragEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CursorAdapter;
+import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 
-
-import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -59,13 +46,11 @@ import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryEventListener;
-import com.firebase.geofire.LocationCallback;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.Geofence;
-
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
@@ -73,22 +58,15 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.Circle;
-import com.google.android.gms.maps.model.CircleOptions;
-import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -101,13 +79,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public static GoogleApiClient mGoogleApiClient;
     private Location mCurrentLocation;
     private Location mLastLocation;
-    public static ArrayList<StoreLocation> Locationlist= new ArrayList<StoreLocation>();
+    public static ArrayList<StoreLocation> Locationlist= new ArrayList<>();
 
 
 
-    ArrayList<Geofence> mGeofenceList = new ArrayList<Geofence>();
+    ArrayList<Geofence> mGeofenceList = new ArrayList<>();
     private static final int GEOFENCERADIUS =50; //50 meters
-    private static final String LOCATION_KEY = "Location";
     private PendingIntent mGeofencePendingIntent;
     private boolean FLAG_FIRST_CYCLE = true;// the flag indicates if the app has start from an idle state, if it's true I must load
     //the data from the server based on the user location, set the camera zoom to be staedy at 14.0 and create geofences it's done all in the
@@ -116,9 +93,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean isGeoFenceEnabled=false;//the flag if set true the geofences will be created, it's set
     //true if the user goes away for a houndred meters from it's starting point and false after it has created them
     private CameraUpdate init_zoom=null;// default map's zoom
-    private long user_id=0;
     private boolean mDataLoaded=false;
-    private double SEARCH_RADIUS=1;
 
     public static boolean isGpsEnabled=false;//variable for the GPS state
     public static boolean isNetworkEnabled=false;
@@ -158,7 +133,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         setMarkerbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO solve if CITY=null;
+
 
                 if (!isNetworkEnabled)
                     NetworkEnabled();
@@ -222,7 +197,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public boolean onQueryTextSubmit(String query) {
                 System.out.println(query);
                 searchView.clearFocus();
-                ArrayList<StoreLocation> arrayList = new ArrayList<StoreLocation>();
+                ArrayList<StoreLocation> arrayList = new ArrayList<>();
                 //do query on the Locationlist ArrayList
                 String tmp = "";
                 if (query.charAt(0) == '#') {
@@ -294,9 +269,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_search) {
-
-        }
+        if (id == R.id.action_search);
         if (id==R.id.action_movecamera){
             if (mCurrentLocation!=null)
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude())));
@@ -339,7 +312,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     try {
                         super.run();
                         //TODO put a handler to create a toast message
-                        sleep(5000);  //Delay of 5 seconds
+                        sleep(3000);  //Delay of 1 seconds
                     } catch (Exception e) {
 
                     } finally {
@@ -420,7 +393,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         //getPArent gets the string Path that is higher
         master.getParent().child("Descriptions").child(location_name).setValue(location_description);
 
-        ArrayList<String> TagsArrayList = new ArrayList<String>();
+        ArrayList<String> TagsArrayList = new ArrayList<>();
         HashTagScan(location_tags, TagsArrayList);
         for (int i=0;i<TagsArrayList.size();i++)
             master.getParent().child("TagsByPlace").child(location_name).child(TagsArrayList.get(i)).setValue(true);
@@ -480,7 +453,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }//onActivityResult
 
     private void updateGroupPosition(){
-        GetGroupPath("0/Positions/"+user_id).setValue(mCurrentLocation);
+        long user_id = 0;
+        GetGroupPath("0/Positions/"+ user_id).setValue(mCurrentLocation);
     }
 
     /**
@@ -655,12 +629,48 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             else{
                 //TODO find a solution when we can't find an address
-                PrintToast("Could not get address!");
 
-                getMyLocationAddress(i);
-                //we'll give London and UK as a default value or ask the user for input
+                //we get the user's previous position and ask the user if it's right, this only if the android version is Higher than 16
+                //if 16 we'll just tell the user that his previous position was used.
 
 
+                SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+
+                CITY=sharedPref.getString(getString((R.string.City)), CITY);
+                COUNTRY=sharedPref.getString(getString((R.string.Country)), COUNTRY);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                    final String POSITIVE="Confirm";
+                    LayoutInflater inflater = this.getLayoutInflater();
+                    final View dialogView = inflater.inflate(R.layout.location_dialog, null);
+
+                    final EditText editText = (EditText) dialogView.findViewById(R.id.CityEditText);//shows the City's name with the option of changing it
+                    final EditText editText1 = (EditText) dialogView.findViewById(R.id.CountryEditText);//shows the country's name with the option of changing the name
+                    editText.setText(CITY);
+                    editText1.setText(COUNTRY);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+                    builder.setMessage("Could not get your current location, is this your current position?\nPlease change it if it's not.")
+                            .setView(dialogView)
+                            .setPositiveButton(POSITIVE, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    CITY = editText.getText().toString();
+                                    COUNTRY = editText1.getText().toString();
+                                }
+                            })
+                            .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                @Override
+                                public void onDismiss(DialogInterface dialog) {
+                                    PrintToast("London, UK was set as default location");
+                                    CITY = "London";
+                                    COUNTRY = "United Kingdom";
+                                }
+                            }).create().show();
+
+                }
+                else {
+                    PrintToast("Could not get your current location so " + CITY + " ," + COUNTRY + "\n please exit the restart the application if it's incorrect");
+                }
             }
 
         return null;
@@ -679,19 +689,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             //startService(intent);
 
             if (COUNTRY.equals("")){
-
                 COUNTRY = getMyLocationAddress(0);
                 CITY = getMyLocationAddress(1);
+                //Save user position and store it inside shared preferences (memory storage)
+                SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putString(getString(R.string.City), CITY);
+                editor.putString(getString(R.string.Country),COUNTRY);
+                editor.commit();
             }
-
 
             mMapsApi_connected=true;
             startLocationUpdates();
         }
         else{
-            PrintToast("Small issues with the gps or network, please wait.");
             //TODO check isnetworkenabled and isgpsenabled before calling methods
             GPSEnabled();
+            PrintToast("Small issues with the gps or network, please wait.");
         }
 
     }
@@ -877,6 +891,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(current));
                 mDataLoaded = false;
                 GeoFire geoFire = new GeoFire(master);
+                double SEARCH_RADIUS = 1;
                 GetDataByLocation(geoFire, new LatLng(current.latitude, current.longitude), SEARCH_RADIUS);
             } else if (distance > 150) {
                 //if the user moved more than a houndred meters, get new data from the database and change mLastLocation's value with the current's value
@@ -918,7 +933,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void GetDataByLocation(final GeoFire geoFire,LatLng latLng,double radius){
         GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(latLng.latitude, latLng.longitude), radius);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
-            ArrayList<CacheLocations> CacheLocations = new ArrayList<CacheLocations>();
+            ArrayList<CacheLocations> CacheLocations = new ArrayList<>();
 
             @Override
             public void onKeyEntered(final String key, final GeoLocation location) {
@@ -979,7 +994,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 (Math.cos(degreesToRadians(old.latitude)) * Math.cos(degreesToRadians(recent.latitude)) *
                         Math.sin(lonDelta / 2) * Math.sin(lonDelta / 2));
 
-        double c = (double) (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+        double c =  (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 
         return radius * c; //Distance in km
     }
@@ -1010,7 +1025,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //creating the object StoreLocation and store them in the ArrayList,
                 String description;
 
-                ArrayList<String> Tags = new ArrayList<String>();
+                ArrayList<String> Tags = new ArrayList<>();
 
                 Iterator<CacheLocations> attribute = list.iterator();
                 while (attribute.hasNext()) {
