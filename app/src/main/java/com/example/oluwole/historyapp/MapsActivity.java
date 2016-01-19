@@ -672,9 +672,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 else {
                     PrintToast("Could not get your current location so " + CITY + " ," + COUNTRY + "\n please exit the restart the application if it's incorrect");
                 }
+                if (i==0)
+                    return COUNTRY;
+                else
+                    return CITY;
             }
 
-        return null;
+        //return null;
     }
     @Override
     public void onConnected(Bundle bundle) {
@@ -1076,7 +1080,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if (isGeoFenceEnabled || FLAG_FIRST_CYCLE) {
                     createGeofences();
                     mGeofencePendingIntent = getGeofencePendingIntent();
-                    if (!mGeofenceList.isEmpty()) {
+                    if (mGoogleApiClient.isConnected()) {
                         LocationServices.GeofencingApi.addGeofences(mGoogleApiClient, getGeofencingRequest(), mGeofencePendingIntent).setResultCallback(new ResultCallback<Status>() {
                             @Override
                             public void onResult(Status status) {

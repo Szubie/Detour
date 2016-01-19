@@ -66,11 +66,13 @@ public class DetailsActivity extends Activity {
                     cursor.close();
                     dbHelper.close();
                     favButton.setText("Favourite");
-                    if (MapsActivity.isNetworkEnabled)
+                    if (MapsActivity.isNetworkEnabled) {
                         master.child(LOCATIONS.getTitle()).child("count").setValue(LOCATIONS.getFavourites() + (long) 1);
+                        rate.setText("" + (LOCATIONS.getFavourites() + 1));
+                    }
                     else
                         PrintToast("No data connection found, couldn't complete the action.");
-                    rate.setText("" + (LOCATIONS.getFavourites()+1));
+
                 }
                 else {
                     DbAdapter dbHelper = new DbAdapter(getApplicationContext(), MapsActivity.CITY);
@@ -82,11 +84,13 @@ public class DetailsActivity extends Activity {
                     dbHelper.close();
                     favButton.clearFocus();
                     favButton.setText("Not Favourite");
-                    if (MapsActivity.isNetworkEnabled)
+                    if (MapsActivity.isNetworkEnabled) {
                         master.child(LOCATIONS.getTitle()).child("count").setValue(LOCATIONS.getFavourites() - (long) 1);
+                        rate.setText("" + (LOCATIONS.getFavourites()));
+                    }
                     else
                         PrintToast("No data connection found, couldn't complete the action.");
-                    rate.setText("" + (LOCATIONS.getFavourites()));
+
                 }
 
             }
