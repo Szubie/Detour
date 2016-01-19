@@ -22,6 +22,7 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.os.ResultReceiver;
 import android.provider.Settings;
 import android.support.v4.view.MenuItemCompat;
@@ -75,7 +76,7 @@ import java.util.Locale;
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,LocationListener,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, GPSDialog.GPSDialogListener{
 
-    private GoogleMap mMap;
+    private static GoogleMap mMap;
     public static GoogleApiClient mGoogleApiClient;
     private Location mCurrentLocation;
     private Location mLastLocation;
@@ -102,7 +103,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public static String COUNTRY="";
     public static String CITY="";
     public static final String PASSING="Loc";
-
+    public static Handler handler;
 
 
 
@@ -111,8 +112,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
+        handler = new Handler(){
+            @Override
+            public void handleMessage(Message msg){
+                if(msg.what == 0){
+                    updateMap(false,null);
+                }
+            }
+        };
+
+
         Firebase.setAndroidContext(this);
         init_zoom=CameraUpdateFactory.zoomTo(14);
 
@@ -716,6 +728,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
     }
+
+
+
     class AddressResultReceiver extends ResultReceiver {
         public AddressResultReceiver(Handler handler) {
             super(handler);
@@ -1174,7 +1189,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         @Override
         public boolean equals(Object object) {
-
             if (object != null && object instanceof CacheLocations) {
                 CacheLocations o = (CacheLocations) object;
                 if (key == null) {
@@ -1189,5 +1203,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             return false;
         }
     }
+
 }
 

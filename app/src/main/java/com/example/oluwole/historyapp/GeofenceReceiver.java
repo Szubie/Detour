@@ -29,13 +29,15 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
  * Created by Benjy on 23/11/2015.
  */
+
 public class GeofenceReceiver extends IntentService {
-    private OnSeenListener mOnSeen;
+
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
      *
@@ -43,6 +45,7 @@ public class GeofenceReceiver extends IntentService {
      */
 
     String mSingleGeofenceString;
+    ArrayList triggeringGeofencesIdsList;
     public GeofenceReceiver(String GeofenceReceiver) {
         super("GeofenceReceiver");
     }
@@ -50,9 +53,8 @@ public class GeofenceReceiver extends IntentService {
         super("");
     }
 
-    public interface OnSeenListener{
-        public void onSeen(boolean s);
-    }
+
+
 
 
 
@@ -60,6 +62,7 @@ public class GeofenceReceiver extends IntentService {
     protected void onHandleIntent(Intent intent) {
 
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
+
 /*        if (geofencingEvent.hasError()) {
             String errorMessage = GeofenceUtils.GeofenceErrorMessages.getErrorString(this,
                     geofencingEvent.getErrorCode());
@@ -100,10 +103,20 @@ public class GeofenceReceiver extends IntentService {
         if (triggeredList.size()>1) {
             notificationIntent = new Intent(getApplicationContext(), ExploreLocations.class);
             notificationIntent.putExtra(MapsActivity.PASSING,MapsActivity.Locationlist);
+
+            for (int i=0;i<triggeringGeofencesIdsList.size();i++){
+
+                StoreLocation s = new StoreLocation(null, (String) triggeringGeofencesIdsList.get(i), null, null, 0, false, false);
+                MapsActivity.Locationlist.get(MapsActivity.Locationlist.indexOf(s)).setSeen(true);
+                MapsActivity.handler.sendEmptyMessage(0);
+            }
+
         }
         else {
             notificationIntent = new Intent(getApplicationContext(), DetailsActivity.class);
             StoreLocation s=new StoreLocation(null,mSingleGeofenceString,null,null,0,false,false);
+            MapsActivity.Locationlist.get(MapsActivity.Locationlist.indexOf(s)).setSeen(true);
+            MapsActivity.handler.sendEmptyMessage(0);
             notificationIntent.putExtra("DetailsActivity", MapsActivity.Locationlist.get(MapsActivity.Locationlist.indexOf(s)));
         }
         //notificationIntent = new Intent(getApplicationContext(), MapsActivity.class);
@@ -161,7 +174,7 @@ public class GeofenceReceiver extends IntentService {
         String geofenceTransitionString = getTransitionString(geofenceTransition);
 
         // Get the Ids of each geofence that was triggered.
-        final ArrayList triggeringGeofencesIdsList = new ArrayList();
+        triggeringGeofencesIdsList = new ArrayList();
         for (Geofence geofence : triggeringGeofences) {
             triggeringGeofencesIdsList.add(MapsActivity.Locationlist.get(Integer.parseInt(geofence.getRequestId())).getTitle());
         }
@@ -181,8 +194,8 @@ public class GeofenceReceiver extends IntentService {
         dbHelper.close();
 
         String triggeringGeofencesIdsString = TextUtils.join(", ", triggeringGeofencesIdsList);
-        //all this section should be in a new thread;
         mSingleGeofenceString=(String)triggeringGeofencesIdsList.get(0);
+
         return geofenceTransitionString + ": " + triggeringGeofencesIdsString;
     }
 

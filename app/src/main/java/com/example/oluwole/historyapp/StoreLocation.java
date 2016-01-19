@@ -37,21 +37,41 @@ public class StoreLocation implements Parcelable{
     public boolean getHasFavourite(){
         return hasFavorite;
     }
-
     public String getTitle(){
         return title;
     }
-
     public String getDescription(){
         return description;
     }
-
     public String getTags(){
         return tags;
     }
     public boolean getSeen(){
         return seen;
     }
+
+    public void setPosition(LatLng latLng){
+        position=latLng;
+    }
+    public void setTitle1(String s){
+        title=s;
+    }
+    public void setDescription(String s){
+        description=s;
+    }
+    public void setTags(String s){
+        tags=s;
+    }
+    public void setSeen(boolean t){
+        seen=t;
+    }
+    public void setFavourites(int favourites){
+        this.favourites=favourites;
+    }
+    public void setHasFavorite(boolean b){
+        hasFavorite=b;
+    }
+
     @Override
     public boolean equals(Object object) {
 
