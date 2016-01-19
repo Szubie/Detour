@@ -658,14 +658,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     COUNTRY = editText1.getText().toString();
                                 }
                             })
-                            .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                            .setOnCancelListener(new DialogInterface.OnCancelListener() {
                                 @Override
-                                public void onDismiss(DialogInterface dialog) {
+                                public void onCancel(DialogInterface dialog) {
                                     PrintToast("London, UK was set as default location");
                                     CITY = "London";
                                     COUNTRY = "United Kingdom";
                                 }
-                            }).create().show();
+                            })
+                            .create().show();
 
                 }
                 else {
@@ -698,6 +699,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 editor.putString(getString(R.string.Country),COUNTRY);
                 editor.commit();
             }
+
+
 
             mMapsApi_connected=true;
             startLocationUpdates();
