@@ -36,25 +36,25 @@ public class AddLocationsActivity extends Activity{
         deploy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!ifNull(location_name,location_description,location_tags));
-                else {
-                    if (!isContained(ListIntent,location_name)) {
-                        final Intent intent = new Intent();
-                        intent.putExtra("location_name", location_name.getText().toString());
-                        intent.putExtra("location_description", location_description.getText().toString());
-                        String tags=HashTagScan(location_tags.getText().toString());
-                        if (tags!=null) {
-                            intent.putExtra("location_tags", tags);//tags--> #night#cold+' '
-                            setResult(Activity.RESULT_OK, intent);
-                            finish();
-                        }
-                        else
-                            PrintToast("Please rewrite the tags (follow the initial hint).");
 
+                    if (!ifNull(location_name, location_description, location_tags)) ;
+                    else {
+                        if (!isContained(ListIntent, location_name)) {
+                            final Intent intent = new Intent();
+                            intent.putExtra("location_name", location_name.getText().toString());
+                            intent.putExtra("location_description", location_description.getText().toString());
+                            String tags = HashTagScan(location_tags.getText().toString());
+                            if (tags != null) {
+                                intent.putExtra("location_tags", tags);//tags--> #night#cold+' '
+                                setResult(Activity.RESULT_OK, intent);
+                                //finish();
+                            } else
+                                PrintToast("Please rewrite the tags (follow the initial hint).");
+
+
+                        }
 
                     }
-
-                }
 
             }
         });

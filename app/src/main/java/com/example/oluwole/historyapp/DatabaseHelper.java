@@ -10,7 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static String DATABASE_NAME = "Detour.db";
-    private static final int DATABASE_VERSION = 1;
+    public static  int DATABASE_VERSION = 1;
     private static String CITY="";
     // Lo statement SQL di creazione del database
 
@@ -19,6 +19,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public DatabaseHelper(Context context,String CITY) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
         this.CITY=CITY;
+    }
+
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+
     }
 
     // Questo metodo viene chiamato durante la creazione del database
@@ -36,7 +42,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Questo metodo viene chiamato durante l'upgrade del database, ad esempio quando viene incrementato il numero di versione
     @Override
     public void onUpgrade( SQLiteDatabase database, int oldVersion, int newVersion ) {
-        database.execSQL("DROP TABLE IF EXISTS contact");
+        database.execSQL("DROP TABLE IF EXISTS "+CITY);
         onCreate(database);
     }
 }

@@ -16,7 +16,7 @@ public class StoreLocation implements Parcelable{
     private long favourites;//rate is an object, with double total and long count variables
     private boolean seen;
     private boolean hasFavorite;//the user's favourite
-
+    private double distanceFromUser;
 
     public StoreLocation(LatLng pos, String title, String description, String tags,long favourites,boolean seen,boolean hasFavorite){
         position=pos;
@@ -26,6 +26,7 @@ public class StoreLocation implements Parcelable{
         this.favourites=favourites;
         this.seen=seen;
         this.hasFavorite=hasFavorite;
+        distanceFromUser=0;
     }
 
     public long getFavourites(){
@@ -49,6 +50,7 @@ public class StoreLocation implements Parcelable{
     public boolean getSeen(){
         return seen;
     }
+    public double getDistanceFromUser(){return distanceFromUser;}
 
     public void setPosition(LatLng latLng){
         position=latLng;
@@ -71,6 +73,7 @@ public class StoreLocation implements Parcelable{
     public void setHasFavorite(boolean b){
         hasFavorite=b;
     }
+    public void setDistanceFromUser(double d){distanceFromUser=d;}
 
     @Override
     public boolean equals(Object object) {

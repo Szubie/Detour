@@ -23,8 +23,8 @@ public class DbAdapter {
     private static final String LOG_TAG = DbAdapter.class.getSimpleName();
 
     private Context context;
-    private SQLiteDatabase database;
-    private DatabaseHelper dbHelper;
+    public  SQLiteDatabase database;
+    public  DatabaseHelper dbHelper;
 
 
     // Database fields

@@ -12,6 +12,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteCursor;
 import android.location.Address;
 import android.location.Geocoder;
@@ -67,6 +68,9 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -84,8 +88,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
 
-    ArrayList<Geofence> mGeofenceList = new ArrayList<>();
-    private static final int GEOFENCERADIUS =50; //50 meters
+    private ArrayList<Geofence> mGeofenceList = new ArrayList<>();
+    private final int GEOFENCERADIUS =50; //50 meters
     private PendingIntent mGeofencePendingIntent;
     private boolean FLAG_FIRST_CYCLE = true;// the flag indicates if the app has start from an idle state, if it's true I must load
     //the data from the server based on the user location, set the camera zoom to be staedy at 14.0 and create geofences it's done all in the
@@ -155,9 +159,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     else {
                         if (mDataLoaded) {
                             DbAdapter adapter=new DbAdapter(getApplicationContext(),CITY);
-                            adapter.open();
-                            adapter.CheckAndReplaceTable();
-                            startAddLocationsActivity();
+                            try {
+                                adapter.open();
+                            }
+                            catch (SQLException e){
+                               DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext(), CITY);
+                                dbHelper.onCreate(adapter.database);
+                                adapter.open();
+                            }
+                            finally {
+                                startAddLocationsActivity();
+                            }
+                                //adapter.CheckAndReplaceTable();
+
                         }
                         else
                             PrintToast("Please wait...");
@@ -283,8 +297,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_search);
         if (id==R.id.action_movecamera){
-            if (mCurrentLocation!=null)
+            if (mCurrentLocation!=null) {
+                mMap.moveCamera(init_zoom);
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude())));
+            }
         }
 
         return super.onOptionsItemSelected(item);
@@ -705,21 +721,32 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             //intent.putExtra(FetchAddressIntentService.Constants.LOCATION_DATA_EXTRA, mLastLocation);
             //startService(intent);
 
-            if (COUNTRY.equals("")){
+            if (CITY.equals("")){
                 COUNTRY = getMyLocationAddress(0);
                 CITY = getMyLocationAddress(1);
                 //Save user position and store it inside shared preferences (memory storage)
                 SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPref.edit();
                 editor.putString(getString(R.string.City), CITY);
-                editor.putString(getString(R.string.Country),COUNTRY);
+                editor.putString(getString(R.string.Country), COUNTRY);
                 editor.commit();
+                DbAdapter adapter=new DbAdapter(getApplicationContext(),CITY);
+                adapter.open();
+                adapter.dbHelper.DATABASE_VERSION=adapter.dbHelper.DATABASE_VERSION+1;
+            }
+            else {
+                DbAdapter adapter=new DbAdapter(getApplicationContext(),CITY);
+                adapter.open();
+                adapter.dbHelper.DATABASE_VERSION=adapter.dbHelper.DATABASE_VERSION+1;
             }
 
 
 
             mMapsApi_connected=true;
             startLocationUpdates();
+
+
+
         }
         else{
             //TODO check isnetworkenabled and isgpsenabled before calling methods
@@ -908,7 +935,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             final Firebase master = GetPathLocations("Places");
             if (FLAG_FIRST_CYCLE)//since it's the first cycle, fetch all the data near the user;
             {
-                mDataLoaded = false;
+                //mDataLoaded = false;
                 mMap.moveCamera(init_zoom);
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(current));
                 mDataLoaded = false;
@@ -1095,8 +1122,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if (isGeoFenceEnabled || FLAG_FIRST_CYCLE) {
                     createGeofences();
                     mGeofencePendingIntent = getGeofencePendingIntent();
-                    if (mGoogleApiClient.isConnected()) {
-                        LocationServices.GeofencingApi.addGeofences(mGoogleApiClient, getGeofencingRequest(), mGeofencePendingIntent).setResultCallback(new ResultCallback<Status>() {
+                    if (mGoogleApiClient.isConnected()&&mGeofenceList!=null) {
+                        LocationServices.GeofencingApi.addGeofences(mGoogleApiClient, getGeofencingRequest(),               mGeofencePendingIntent).setResultCallback(new ResultCallback<Status>() {
                             @Override
                             public void onResult(Status status) {
                                 Log.i("APPPP", "" + status.getStatusMessage());
@@ -1124,8 +1151,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private StoreLocation checkLocalDb(StoreLocation newStorelocation){
         StoreLocation niceStoreLocation = null;
-        DbAdapter dbHelper = new DbAdapter(this,CITY);
+        DbAdapter dbHelper = new DbAdapter(getApplicationContext(),CITY);
         dbHelper.open();
+
+
+
         SQLiteCursor cursor = dbHelper.fetchContactsByFilter(newStorelocation.getTitle());// query by name
 
         if (!cursor.moveToFirst()){

@@ -6,7 +6,12 @@ import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
+//import android.support.design.widget.TabLayout;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -18,6 +23,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TabHost;
+import android.widget.TableLayout;
+
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -37,12 +45,30 @@ public class ExploreLocations extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.explore_list);
-        Intent intent = getIntent();
+        //Intent intent = getIntent();
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
-        getSupportActionBar().setTitle("Near you");
+        getSupportActionBar().setTitle("Quirky Facts");
 
+
+        //final TabHost tabLayout = (TabHost) findViewById(R.id.tab_layout);
+
+        //tabLayout.addTab(tabLayout.newTabSpec("All Location").setIndicator("Tab1").setContent(new Intent(this,FullLocationList.class)));
+        //tabLayout.addTab(tabLayout.newTabSpec("Nearest").setIndicator("Tab2"));
+        //tabLayout.addTab(tabLayout.newTabSpec("Popular").setIndicator("Tab3"));
+
+
+        final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
+        final CustomPagerAdapter pagerAdapter = new CustomPagerAdapter
+                (getSupportFragmentManager(), 1);
+
+        viewPager.setAdapter(pagerAdapter);
+        // Give the TabLayout the ViewPager
+        //TabLayout tabLayout = (TabLayout) findViewById(R.id.sliding_tabs);
+        //tabLayout.setupWithViewPager(viewPager);
+
+/*
         //just creating a new instace of the array, based on the number of the locations on the map
         LOCATIONS=intent.getParcelableArrayListExtra(MapsActivity.PASSING);
         location_name=new String[LOCATIONS.size()];
@@ -67,7 +93,7 @@ public class ExploreLocations extends AppCompatActivity {
                 startActivity(intent1);
                 finish();
             }
-        });
+        });*/
 
     }
     @Override
